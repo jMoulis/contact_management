@@ -183,7 +183,10 @@ class ContactController extends BaseController
         $message = (new \Swift_Message('Nouveau Contact'))
             ->setFrom($contact->getEmail())
             ->setTo('julien.moulis@moulis.me')
-            ->setBody($contact->getMessage())
+            ->setBody($this->renderView(
+                'email/email_template.html.twig',
+                ['contact' => $contact]
+            ), 'text/html')
         ;
 
         $mailer->send($message);
