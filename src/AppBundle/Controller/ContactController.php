@@ -40,7 +40,7 @@ class ContactController extends BaseController
         $em->persist($contact);
         $em->flush();
 
-        $this->sendEmailAction($contact, $mailer);
+        //$this->sendEmailAction($contact, $mailer);
 
         $location = $this->generateUrl('api_contacts_show', [
             'firstname' => $contact->getFirstname()
