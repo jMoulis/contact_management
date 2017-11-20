@@ -15,7 +15,6 @@ services:
         public: false
 
     _defaults:
-
         autowire: true
         autoconfigure: true
         public: false

@@ -22,7 +22,7 @@ class ContactController extends BaseController
      * @Route("/api/contacts", name="api_contact_new")
      * @Method("POST")
      */
-    public function newAction(Request $request)
+    public function newAction(Request $request, \Swift_Mailer $mailer)
     {
         $contact = new Contact();
         $form = $this->createForm(ContactType::class, $contact);
@@ -39,6 +39,8 @@ class ContactController extends BaseController
         $em = $this->getDoctrine()->getManager();
         $em->persist($contact);
         $em->flush();
+
+        $this->sendEmailAction($contact, $mailer);
 
         $location = $this->generateUrl('api_contacts_show', [
             'firstname' => $contact->getFirstname()
@@ -175,4 +177,18 @@ class ContactController extends BaseController
 
         throw new ApiProblemException($apiProblem);
     }
+
+    public function sendEmailAction(Contact $contact, \Swift_Mailer $mailer)
+    {
+        $message = (new \Swift_Message('Nouveau Contact'))
+            ->setFrom($contact->getEmail())
+            ->setTo('julien.moulis@moulis.me')
+            ->setBody($contact->getMessage())
+        ;
+
+        $mailer->send($message);
+
+        return new Response(null, 204);
+    }
+
 }

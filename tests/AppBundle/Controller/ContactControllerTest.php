@@ -21,7 +21,8 @@ class ContactControllerTest extends ApiTestCase
             'lastname' => 'Selka',
             'email' => 'julien.moulis@moulis.me',
             'phone' => '+33643390714',
-            'message' => 'Lorem ipsum manaveat clovitic narvalo'
+            'message' => 'Lorem ipsum manaveat clovitic narvalo',
+            'company' => 'SimonCompany'
         ];
 
         $response = $this->client->post('/api/contacts', [
@@ -42,7 +43,8 @@ class ContactControllerTest extends ApiTestCase
             'lastname' => 'Moulis',
             'email' => 'julien.moulis@moulis.me',
             'phone' => '+33643390714',
-            'message' => 'Lorem ipsum manaveat clovitic narvalo'
+            'message' => 'Lorem ipsum manaveat clovitic narvalo',
+            'company' => 'SimonCompany'
         ]);
 
         $response = $this->client->get('/api/contacts/rachel');
@@ -52,7 +54,8 @@ class ContactControllerTest extends ApiTestCase
             'lastname',
             'email',
             'phone',
-            'message'
+            'message',
+            'company'
         ]);
         $this->asserter()->assertResponsePropertyEquals($response, 'firstname', 'rachel');
     }
@@ -64,7 +67,8 @@ class ContactControllerTest extends ApiTestCase
             'lastname' => 'Selka',
             'email' => 'julien.moulis@moulis.me',
             'phone' => '+33643390714',
-            'message' => 'Lorem ipsum manaveat clovitic narvalo'
+            'message' => 'Lorem ipsum manaveat clovitic narvalo',
+            'company' => 'SimonCompany'
         ]);
 
         $this->createContact($data = [
@@ -72,7 +76,8 @@ class ContactControllerTest extends ApiTestCase
             'lastname' => 'Moulis',
             'email' => 'julien.moulis@moulis.me',
             'phone' => '+33643390714',
-            'message' => 'Lorem ipsum manaveat clovitic narvalo'
+            'message' => 'Lorem ipsum manaveat clovitic narvalo',
+            'company' => 'SimonCompany'
         ]);
 
         $response = $this->client->get('/api/contacts');
@@ -91,7 +96,8 @@ class ContactControllerTest extends ApiTestCase
             'lastname' => 'Selka',
             'email' => 'julien.moulis@moulis.me',
             'phone' => '+33643390714',
-            'message' => 'Lorem ipsum manaveat clovitic narvalo'
+            'message' => 'Lorem ipsum manaveat clovitic narvalo',
+            'company' => 'SimonCompany'
         ]);
 
         $data = [
@@ -99,7 +105,8 @@ class ContactControllerTest extends ApiTestCase
             'lastname' => 'Moulis',
             'email' => 'rachel.moulis@moulis.me',
             'phone' => '+33643390714',
-            'message' => 'Lorem ipsum manaveat clovitic narvalo'
+            'message' => 'Lorem ipsum manaveat clovitic narvalo',
+            'company' => 'SimonCompany'
         ];
 
         $response = $this->client->put('/api/contacts/rachel', [
@@ -118,7 +125,8 @@ class ContactControllerTest extends ApiTestCase
             'lastname' => 'Selka',
             'email' => 'julien.moulis@moulis.me',
             'phone' => '+33643390714',
-            'message' => 'Lorem ipsum manaveat clovitic narvalo'
+            'message' => 'Lorem ipsum manaveat clovitic narvalo',
+            'company' => 'SimonCompany'
         ]);
 
         $data = [
@@ -143,7 +151,8 @@ class ContactControllerTest extends ApiTestCase
             'lastname' => 'Selka',
             'email' => 'julien.moulis@moulis.me',
             'phone' => '+33643390714',
-            'message' => 'Lorem ipsum manaveat clovitic narvalo'
+            'message' => 'Lorem ipsum manaveat clovitic narvalo',
+            'company' => 'SimonCompany'
         ]);
 
         $response = $this->client->delete('/api/contacts/rachel');
@@ -157,7 +166,8 @@ class ContactControllerTest extends ApiTestCase
             'firstname' => 'Julien',
             'lastname' => 'Selka',
             'phone' => '+33643390714',
-            'message' => 'Lorem ipsum manaveat clovitic narvalo'
+            'message' => 'Lorem ipsum manaveat clovitic narvalo',
+            'company' => 'SimonCompany'
         ];
 
         $response = $this->client->post('/api/contacts', [
@@ -182,7 +192,8 @@ class ContactControllerTest extends ApiTestCase
 {
     "firstname": "JohnnyRobot",
     "lastname" : "2
-    "phone": "I'm from a test!"
+    "phone": "I'm from a test!",
+    'company' => 'SimonCompany'
 }
 EOF;
 
