@@ -10,4 +10,20 @@ namespace AppBundle\Repository;
  */
 class ContactRepository extends \Doctrine\ORM\EntityRepository
 {
+    public function finAllQueryBuilder()
+    {
+        return $this->createQueryBuilder('contact');
+    }
+
+    public function findAllQueryBuilder($filter = '')
+    {
+        $qb = $this->createQueryBuilder('contact');
+
+        if ($filter) {
+            $qb->andWhere('contact.firstname LIKE :filter')
+                ->setParameter('filter', '%'.$filter.'%');
+        }
+
+        return $qb;
+    }
 }

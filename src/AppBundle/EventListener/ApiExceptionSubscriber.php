@@ -16,7 +16,7 @@ class ApiExceptionSubscriber implements EventSubscriberInterface
     private $logger;
     private $debug;
 
-    public function __construct($debug = false, LoggerInterface $logger)
+    public function __construct($debug, LoggerInterface $logger)
     {
         $this->logger = $logger;
         $this->debug = $debug;
@@ -24,24 +24,22 @@ class ApiExceptionSubscriber implements EventSubscriberInterface
 
     public function onKernelException(GetResponseForExceptionEvent $event)
     {
-        // only reply to /api URLs
+
         if (strpos($event->getRequest()->getPathInfo(), '/api') !== 0) {
             return;
         }
+
         $e = $event->getException();
+
         $statusCode = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : 500;
 
         if ($statusCode == 500 && $this->debug) {
             return;
         }
 
-        $this->logException($e);
-
         if ($e instanceof ApiProblemException) {
             $apiProblem = $e->getApiProblem();
         } else {
-
-
             $apiProblem = new ApiProblem(
                 $statusCode
             );

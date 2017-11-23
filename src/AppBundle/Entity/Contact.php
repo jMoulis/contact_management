@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
+use AppBundle\Annotation\Link;
 
 /**
  * Contact
@@ -13,6 +14,11 @@ use Symfony\Component\Validator\Constraints as Assert;
  *
  * @ORM\Table(name="contact")
  * @ORM\Entity(repositoryClass="AppBundle\Repository\ContactRepository")
+ * @Link(
+ *  "self",
+ *  route = "api_contacts_show",
+ *  params = { "firstname": "object.getFirstname()" }
+ * )
  */
 class Contact
 {
@@ -28,6 +34,7 @@ class Contact
     /**
      * @var string
      *
+     * @Assert\NotBlank(message="Merci de renseigner votre nom")
      * @Serializer\Expose
      * @ORM\Column(name="lastname", type="string", length=255)
      */
@@ -36,7 +43,7 @@ class Contact
     /**
      * @var string
      *
-     *
+     * @Assert\NotBlank(message="Merci de renseigner votre prénom")
      * @Serializer\Expose
      * @ORM\Column(name="firstname", type="string", length=255)
      */
@@ -53,13 +60,16 @@ class Contact
 
     /**
      * @var string
+     *
      * @Serializer\Expose
-     * @ORM\Column(name="phone", type="string", length=255)
+     * @ORM\Column(name="phone", type="string", nullable=true, length=255)
      */
     private $phone;
 
     /**
      * @var string
+     *
+     * @Assert\NotBlank(message="Merci de renseigner votre demande")
      * @Serializer\Expose
      * @ORM\Column(name="message", type="text")
      */
@@ -68,7 +78,7 @@ class Contact
     /**
      * @var string
      * @Serializer\Expose
-     * @Orm\Column(name="company", type="string", length=255)
+     * @Orm\Column(name="company", type="string", length=255, nullable=true)
      */
     private $company;
 

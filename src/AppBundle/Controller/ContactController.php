@@ -7,9 +7,12 @@ use AppBundle\Api\ApiProblemException;
 use AppBundle\Entity\Contact;
 use AppBundle\Form\ContactType;
 use AppBundle\Form\UpdateContactType;
+use AppBundle\Pagination\PaginetedCollection;
+use AppBundle\Repository\ContactRepository;
+use Pagerfanta\Adapter\DoctrineORMAdapter;
+use Pagerfanta\Pagerfanta;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\Form\FormInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -22,7 +25,7 @@ class ContactController extends BaseController
      * @Route("/api/contacts", name="api_contact_new")
      * @Method("POST")
      */
-    public function newAction(Request $request, \Swift_Mailer $mailer)
+    public function newAction(Request $request)
     {
         $contact = new Contact();
         $form = $this->createForm(ContactType::class, $contact);
@@ -40,7 +43,7 @@ class ContactController extends BaseController
         $em->persist($contact);
         $em->flush();
 
-        $this->sendEmailAction($contact, $mailer);
+        $this->sendEmailAction($contact);
 
         $location = $this->generateUrl('api_contacts_show', [
             'firstname' => $contact->getFirstname()
@@ -71,16 +74,21 @@ class ContactController extends BaseController
     }
 
     /**
-     * @Route("/api/contacts")
+     * @Route("/api/contacts", name="api_contacts_collection")
      * @Method("GET")
      */
-    public function listAction()
+    public function listAction(Request $request)
     {
-        $contacts = $this->getDoctrine()
-            ->getRepository('AppBundle:Contact')
-            ->findAll();
+        $filter = $request->query->get('filter');
+        $repository = $this->getDoctrine()
+            ->getRepository(Contact::class);
 
-        $response = $this->createApiResponse(['contacts' => $contacts], 200);
+        $qb = $repository->finAllQueryBuilder();
+
+        $paginatedCollection = $this->get('pagination_factory')
+            ->createCollection($qb, $request, 'api_contacts_collection');
+
+        $response = $this->createApiResponse($paginatedCollection);
 
         return $response;
     }
@@ -178,7 +186,7 @@ class ContactController extends BaseController
         throw new ApiProblemException($apiProblem);
     }
 
-    public function sendEmailAction(Contact $contact, \Swift_Mailer $mailer)
+    public function sendEmailAction(Contact $contact)
     {
         $message = (new \Swift_Message('Nouveau Contact'))
             ->setFrom($contact->getEmail())
@@ -189,7 +197,7 @@ class ContactController extends BaseController
             ), 'text/html')
         ;
 
-        $mailer->send($message);
+        $this->get('mailer')->send($message);
 
         return new Response(null, 204);
     }

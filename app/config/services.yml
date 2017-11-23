@@ -1,31 +1,21 @@
 # Learn more about services, parameters and containers at
-# https://symfony.com/doc/current/service_container.html
+# http://symfony.com/doc/current/book/service_container.html
 parameters:
-    #parameter_name: value
+#    parameter_name: value
 
 services:
-    api_problem_subscriber:
+    api_exception_subscriber:
         class: AppBundle\EventListener\ApiExceptionSubscriber
-        arguments: []
+        arguments: ['%kernel.debug%', '@logger']
         tags:
             - { name: kernel.event_subscriber }
 
-    api_exception:
-        class: AppBundle\Api\ApiProblemException
-        public: false
+    pagination_factory:
+        class: AppBundle\Pagination\PaginationFactory
+        arguments: ['@router']
 
-    _defaults:
-        autowire: true
-        autoconfigure: true
-        public: false
-
-
-    AppBundle\:
-        resource: '../../src/AppBundle/*'
-        exclude: '../../src/AppBundle/{Entity,Repository,Tests}'
-
-    AppBundle\Controller\:
-        resource: '../../src/AppBundle/Controller'
-        public: true
-        tags: ['controller.service_arguments']
-
+    link_serialization_subscriber:
+        class: AppBundle\Serializer\LinkSerializationSubscriber
+        arguments: ['@router', '@annotation_reader']
+        tags:
+            - { name: jms_serializer.event_subscriber }
