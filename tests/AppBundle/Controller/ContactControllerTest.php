@@ -14,8 +14,9 @@ use AppBundle\Test\ApiTestCase;
 
 class ContactControllerTest extends ApiTestCase
 {
-    public function testNewAction()
+    public function testWorksNewAction()
     {
+        $this->createUser('weaverryan', 'I<3Pizza');
         $data = [
             'firstname' => 'rachel',
             'lastname' => 'Selka',
@@ -26,7 +27,8 @@ class ContactControllerTest extends ApiTestCase
         ];
 
         $response = $this->client->post('/api/contacts', [
-            'body' => json_encode($data)
+            'body' => json_encode($data),
+            'headers' => $this->getAuthorizedHeaders('weaverryan')
         ]);
 
         $this->assertEquals(201, $response->getStatusCode());
@@ -39,6 +41,7 @@ class ContactControllerTest extends ApiTestCase
 
     public function testShowAction()
     {
+        $this->createUser('weaverryan', 'I<3Pizza');
         $this->createContact($data = [
             'firstname' => 'rachel',
             'lastname' => 'Moulis',
@@ -48,7 +51,10 @@ class ContactControllerTest extends ApiTestCase
             'company' => 'SimonCompany'
         ]);
 
-        $response = $this->client->get('/api/contacts/rachel');
+        $response = $this->client->get('/api/contacts/rachel',
+            [
+                'headers' => $this->getAuthorizedHeaders('weaverryan')
+            ]);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->asserter()->assertResponsePropertiesExist($response, [
@@ -72,6 +78,7 @@ class ContactControllerTest extends ApiTestCase
 
     public function testListAction()
     {
+        $this->createUser('weaverryan', 'I<3Pizza');
         $this->createContact([
             'firstname' => 'rachel',
             'lastname' => 'Selka',
@@ -90,7 +97,10 @@ class ContactControllerTest extends ApiTestCase
             'company' => 'SimonCompany'
         ]);
 
-        $response = $this->client->get('/api/contacts');
+        $response = $this->client->get('/api/contacts',
+            [
+                'headers' => $this->getAuthorizedHeaders('weaverryan')
+            ]);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->asserter()->assertResponsePropertyIsArray($response, 'items');
@@ -101,6 +111,7 @@ class ContactControllerTest extends ApiTestCase
 
     public function testListPaginatedAction()
     {
+        $this->createUser('weaverryan', 'I<3Pizza');
         $this->createContact([
             'firstname' => 'willnotMatch',
             'lastname' => 'Selka',
@@ -122,7 +133,10 @@ class ContactControllerTest extends ApiTestCase
         }
 
         // page 1
-        $response = $this->client->get('/api/contacts?filter=contact');
+        $response = $this->client->get('/api/contacts?filter=contact',
+            [
+                'headers' => $this->getAuthorizedHeaders('weaverryan')
+            ]);
         $this->assertEquals(200, $response->getStatusCode());
         $this->asserter()->assertResponsePropertyEquals(
             $response,
@@ -136,7 +150,10 @@ class ContactControllerTest extends ApiTestCase
 
         // page 2
         $nextLink = $this->asserter()->readResponseProperty($response, '_links.next');
-        $response = $this->client->get($nextLink);
+        $response = $this->client->get($nextLink,
+            [
+                'headers' => $this->getAuthorizedHeaders('weaverryan')
+            ]);
         $this->assertEquals(200, $response->getStatusCode());
         $this->asserter()->assertResponsePropertyEquals(
             $response,
@@ -146,7 +163,10 @@ class ContactControllerTest extends ApiTestCase
         $this->asserter()->assertResponsePropertyEquals($response, 'count', 10);
 
         $lastLink = $this->asserter()->readResponseProperty($response, '_links.last');
-        $response = $this->client->get($lastLink);
+        $response = $this->client->get($lastLink,
+            [
+                'headers' => $this->getAuthorizedHeaders('weaverryan')
+            ]);
         $this->assertEquals(200, $response->getStatusCode());
         $this->asserter()->assertResponsePropertyEquals(
             $response,
@@ -160,6 +180,7 @@ class ContactControllerTest extends ApiTestCase
 
     public function testPutUpdateAction()
     {
+        $this->createUser('weaverryan', 'I<3Pizza');
         $this->createContact($data = [
             'firstname' => 'rachel',
             'lastname' => 'Selka',
@@ -179,7 +200,8 @@ class ContactControllerTest extends ApiTestCase
         ];
 
         $response = $this->client->put('/api/contacts/rachel', [
-            'body' => json_encode($data)
+            'body' => json_encode($data),
+            'headers' => $this->getAuthorizedHeaders('weaverryan')
         ]);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -189,6 +211,7 @@ class ContactControllerTest extends ApiTestCase
 
     public function testPatchUpdateAction()
     {
+        $this->createUser('weaverryan', 'I<3Pizza');
         $this->createContact($data = [
             'firstname' => 'rachel',
             'lastname' => 'Selka',
@@ -204,7 +227,8 @@ class ContactControllerTest extends ApiTestCase
         ];
 
         $response = $this->client->patch('/api/contacts/rachel', [
-            'body' => json_encode($data)
+            'body' => json_encode($data),
+            'headers' => $this->getAuthorizedHeaders('weaverryan')
         ]);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -215,6 +239,7 @@ class ContactControllerTest extends ApiTestCase
 
     public function testDeleteAction()
     {
+        $this->createUser('weaverryan', 'I<3Pizza');
         $this->createContact($data = [
             'firstname' => 'rachel',
             'lastname' => 'Selka',
@@ -224,13 +249,17 @@ class ContactControllerTest extends ApiTestCase
             'company' => 'SimonCompany'
         ]);
 
-        $response = $this->client->delete('/api/contacts/rachel');
+        $response = $this->client->delete('/api/contacts/rachel',
+            [
+                'headers' => $this->getAuthorizedHeaders('weaverryan')
+            ]);
         $this->assertEquals(204, $response->getStatusCode());
 
     }
 
     public function testValidationErrors()
     {
+        $this->createUser('weaverryan', 'I<3Pizza');
         $data = [
             'firstname' => 'Julien',
             'lastname' => 'Selka',
@@ -240,7 +269,8 @@ class ContactControllerTest extends ApiTestCase
         ];
 
         $response = $this->client->post('/api/contacts', [
-            'body' => json_encode($data)
+            'body' => json_encode($data),
+            'headers' => $this->getAuthorizedHeaders('weaverryan')
         ]);
 
         $this->assertEquals(400, $response->getStatusCode());
@@ -257,6 +287,7 @@ class ContactControllerTest extends ApiTestCase
 
     public function testInvalidJson()
     {
+        $this->createUser('weaverryan', 'I<3Pizza');
         $invalidBody = <<<EOF
 {
     "firstname": "JohnnyRobot",
@@ -267,7 +298,8 @@ class ContactControllerTest extends ApiTestCase
 EOF;
 
         $response = $this->client->post('/api/contacts', [
-            'body' => $invalidBody
+            'body' => $invalidBody,
+            'headers' => $this->getAuthorizedHeaders('weaverryan')
         ]);
 
         $this->assertEquals(400, $response->getStatusCode());
@@ -279,11 +311,24 @@ EOF;
 
     public function test404Exception()
     {
-        $response = $this->client->get('/api/contacts/fake');
+        $this->createUser('weaverryan', 'I<3Pizza');
+        $response = $this->client->get('/api/contacts/fake', [
+            'headers' => $this->getAuthorizedHeaders('weaverryan')
+        ]);
         $this->assertEquals(404, $response->getStatusCode());
         $this->assertEquals('application/problem+json', $response->getHeader('Content-Type')[0]);
         $this->asserter()->assertResponsePropertyEquals($response, 'type', 'about:blank');
         $this->asserter()->assertResponsePropertyEquals($response, 'title', 'Not Found');
         $this->asserter()->assertResponsePropertyEquals($response, 'detail', 'No contact fake bummer');
     }
+
+    public function testRequiresAuthentification()
+    {
+        $response = $this->client->post('/api/contacts', [
+            'body' => '[]'
+        ]);
+        $this->assertEquals(401, $response->getStatusCode());
+    }
+
+
 }

@@ -4,6 +4,7 @@ namespace AppBundle\EventListener;
 
 use AppBundle\Api\ApiProblem;
 use AppBundle\Api\ApiProblemException;
+use AppBundle\Api\ResponseFactory;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
@@ -15,11 +16,13 @@ class ApiExceptionSubscriber implements EventSubscriberInterface
 {
     private $logger;
     private $debug;
+    private $responseFactory;
 
-    public function __construct($debug, LoggerInterface $logger)
+    public function __construct($debug, LoggerInterface $logger, ResponseFactory $responseFactory)
     {
         $this->logger = $logger;
         $this->debug = $debug;
+        $this->responseFactory = $responseFactory;
     }
 
     public function onKernelException(GetResponseForExceptionEvent $event)
@@ -49,17 +52,7 @@ class ApiExceptionSubscriber implements EventSubscriberInterface
             }
         }
 
-        $data = $apiProblem->toArray();
-        // making type a URL, to a temporarily fake page
-        if ($data['type'] != 'about:blank') {
-            $data['type'] = 'http://localhost:8000/docs/errors#'.$data['type'];
-        }
-
-        $response = new JsonResponse(
-            $data,
-            $apiProblem->getStatusCode()
-        );
-        $response->headers->set('Content-Type', 'application/problem+json');
+        $response = $this->responseFactory->createResponse($apiProblem);
 
         $event->setResponse($response);
     }

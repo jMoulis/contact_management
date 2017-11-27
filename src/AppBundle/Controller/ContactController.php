@@ -12,11 +12,15 @@ use AppBundle\Repository\ContactRepository;
 use Pagerfanta\Adapter\DoctrineORMAdapter;
 use Pagerfanta\Pagerfanta;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+/**
+ * @Security("is_granted('ROLE_USER')")
+ */
 class ContactController extends BaseController
 {
     /**
@@ -27,6 +31,8 @@ class ContactController extends BaseController
      */
     public function newAction(Request $request)
     {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
         $contact = new Contact();
         $form = $this->createForm(ContactType::class, $contact);
 

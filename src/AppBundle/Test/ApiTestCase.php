@@ -3,6 +3,7 @@
 namespace AppBundle\Test;
 
 use AppBundle\Entity\Contact;
+use AppBundle\Entity\User;
 use Doctrine\Common\DataFixtures\Purger\ORMPurger;
 use Doctrine\ORM\EntityManager;
 use GuzzleHttp\Client;
@@ -266,6 +267,15 @@ class ApiTestCase extends KernelTestCase
         return $last['response'];
     }
 
+    protected function getAuthorizedHeaders($username, $headers = [])
+    {
+        $token =$this->getService('lexik_jwt_authentication.encoder')
+            ->encode(['username' => $username]);
+
+        $headers['Authorization'] = 'Bearer '.$token;
+
+        return $headers;
+    }
     /**
      * @return ResponseAsserter
      */
@@ -311,6 +321,22 @@ class ApiTestCase extends KernelTestCase
     protected function adjustUri($uri)
     {
         return '/'.$uri;
+    }
+
+    protected function createUser($username, $plainPassword = 'foo')
+    {
+        $user = new User();
+        $user->setUsername($username);
+        $user->setEmail($username.'@foo.com');
+        $password = $this->getService('security.password_encoder')
+            ->encodePassword($user, $plainPassword);
+        $user->setPassword($password);
+
+        $em = $this->getEntityManager();
+        $em->persist($user);
+        $em->flush();
+
+        return $user;
     }
 
 }
