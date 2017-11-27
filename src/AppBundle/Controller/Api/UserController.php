@@ -1,13 +1,13 @@
 <?php
 
-namespace AppBundle\Controller;
+namespace AppBundle\Controller\Api;
 
 use AppBundle\Api\ApiProblem;
 use AppBundle\Api\ApiProblemException;
+use AppBundle\Controller\BaseController;
 use AppBundle\Entity\User;
 use AppBundle\Form\UpdateUserType;
 use AppBundle\Form\UserType;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
