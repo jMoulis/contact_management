@@ -78,6 +78,7 @@ class ApiTestCase extends KernelTestCase
         self::$history = array();
 
         $this->purgeDatabase();
+        //$this->createUser('rachel', 'test');
     }
 
     /**
@@ -327,7 +328,7 @@ class ApiTestCase extends KernelTestCase
     {
         $user = new User();
         $user->setUsername($username);
-        $user->setEmail($username.'@foo.com');
+        $user->setEmail($username.'@moulis.me');
         $password = $this->getService('security.password_encoder')
             ->encodePassword($user, $plainPassword);
         $user->setPassword($password);

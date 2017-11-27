@@ -2,15 +2,23 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Api\ApiProblem;
+use AppBundle\Api\ApiProblemException;
 use AppBundle\Entity\User;
+use AppBundle\Form\UpdateUserType;
+use AppBundle\Form\UserType;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Symfony\Component\HttpFoundation\Response;
+
 
 class UserController extends BaseController
 {
     /**
-     * @Route("/register", name="user_register")
+     * @Route("/api/register", name="user_register")
      * @Method("GET")
      */
     public function registerAction()
@@ -23,45 +31,18 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/register", name="user_register_handle")
+     * @Route("/api/users", name="api_user_new")
      * @Method("POST")
      */
-    public function registerHandleAction(Request $request)
+    public function newAction(Request $request)
     {
-        $errors = array();
-
-        if (!$email = $request->request->get('email')) {
-            $errors[] = '"email" is required';
-        }
-        if (!$plainPassword = $request->request->get('plainPassword')) {
-            $errors[] = '"password" is required';
-        }
-        if (!$username = $request->request->get('username')) {
-            $errors[] = '"username" is required';
-        }
-
-        $userRepository = $this->getUserRepository();
-
-        // make sure we don't already have this user!
-        if ($existingUser = $userRepository->findUserByEmail($email)) {
-            $errors[] = 'A user with this email is already registered!';
-        }
-
-        // make sure we don't already have this user!
-        if ($existingUser = $userRepository->findUserByUsername($username)) {
-            $errors[] = 'A user with this username is already registered!';
-        }
-
+        //$this->denyAccessUnlessGranted('ROLE_USER');
         $user = new User();
-        $user->setEmail($email);
-        $user->setUsername($username);
-        $encodedPassword = $this->container->get('security.password_encoder')
-            ->encodePassword($user, $plainPassword);
-        $user->setPassword($encodedPassword);
+        $form = $this->createForm(UserType::class, $user);
+        $this->processForm($request, $form);
 
-        // errors? Show them!
-        if (count($errors) > 0) {
-            return $this->render('user\register.twig', array('errors' => $errors, 'user' => $user));
+        if (!$form->isValid()) {
+            $this->throwApiProblemValidationException($form);
         }
 
         $em = $this->getDoctrine()->getManager();
@@ -70,7 +51,104 @@ class UserController extends BaseController
 
         $this->loginUser($user);
 
-        return $this->redirect($this->generateUrl('homepage'));
+        $response = $this->createApiResponse([], 201);
+        $response->headers->set('Location', '/login');
+
+        return $response;
+    }
+
+    /**
+     * @Route("/api/users/{username}", name="api_users_show")
+     * @Method("GET")
+     */
+    public function showAction($username)
+    {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+        $user = $this->getDoctrine()
+            ->getRepository('AppBundle:User')
+            ->findOneBy(['username' => $username]);
+
+        if (!$user) {
+            throw $this->createNotFoundException('No contact '. $username .' bummer');
+        }
+        $response = $this->createApiResponse($user, 200);
+
+        return $response;
+    }
+
+    /**
+     * @Route("/api/users", name="api_users_collection")
+     * @Method("GET")
+     */
+    public function listAction(Request $request)
+    {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
+        $filter = $request->query->get('filter');
+
+        $repository = $this->getDoctrine()
+            ->getRepository(User::class);
+
+        $qb = $repository->finAllQueryBuilder();
+
+        $paginatedCollection = $this->get('pagination_factory')
+            ->createCollection($qb, $request, 'api_users_collection');
+
+        $response = $this->createApiResponse($paginatedCollection);
+
+        return $response;
+    }
+
+    /**
+     * @Route("/api/users/{username}", name="api_users_update")
+     * @Method({"PUT", "PATCH"})
+     */
+    public function updateAction(Request $request, $username)
+    {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
+        $user = $this->getDoctrine()
+            ->getRepository('AppBundle:User')
+            ->findOneBy(['username' => $username]);
+
+        if (!$user) {
+            throw $this->createNotFoundException('No contact '. $username .' bummer');
+        }
+
+        $form = $this->createForm(UpdateUserType::class, $user);
+        $this->processForm($request, $form);
+
+        if (!$form->isValid()) {
+            $this->throwApiProblemValidationException($form);
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $em->persist($user);
+        $em->flush();
+
+        $response = $this->createApiResponse($user, 200);
+
+        return $response;
+    }
+
+    /**
+     * @Route("/api/users/{username}", name="api_users_delete")
+     * @Method("DELETE")
+     */
+    public function deleteAction($username)
+    {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+        $user = $this->getDoctrine()
+            ->getRepository('AppBundle:User')
+            ->findOneBy(['username' => $username]);
+
+        if ($user) {
+            $em = $this->getDoctrine()->getManager();
+            $em->remove($user);
+            $em->flush();
+        }
+
+        return new Response(null, 204);
     }
 
     /**
@@ -102,5 +180,49 @@ class UserController extends BaseController
     public function logoutAction()
     {
         throw new \Exception('Should not get here - this should be handled magically by the security system!');
+    }
+
+    private function processForm(Request $request, FormInterface $form)
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if ($data === null) {
+
+            $apiProblem = new ApiProblem(400, ApiProblem::TYPE_INVALID_REQUEST_BODY_FORMAT);
+
+            throw new ApiProblemException($apiProblem);
+        }
+
+        $clearMissing = $request->getMethod() != 'PATCH';
+        $form->submit($data, $clearMissing);
+    }
+
+    private function getErrorsFromForm(FormInterface $form)
+    {
+        $errors = array();
+        foreach ($form->getErrors() as $error) {
+            $errors[] = $error->getMessage();
+        }
+        foreach ($form->all() as $childForm) {
+            if ($childForm instanceof FormInterface) {
+                if ($childErrors = $this->getErrorsFromForm($childForm)) {
+                    $errors[$childForm->getName()] = $childErrors;
+                }
+            }
+        }
+        return $errors;
+    }
+
+    private function throwApiProblemValidationException(FormInterface $form)
+    {
+        $errors = $this->getErrorsFromForm($form);
+
+        $apiProblem = new ApiProblem(
+            400,
+            ApiProblem::TYPE_VALIDATION_ERROR
+        );
+        $apiProblem->set('errors', $errors);
+
+        throw new ApiProblemException($apiProblem);
     }
 }

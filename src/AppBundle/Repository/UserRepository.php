@@ -61,4 +61,21 @@ class UserRepository extends EntityRepository implements UserLoaderInterface
 
         return $user;
     }
+
+    public function finAllQueryBuilder()
+    {
+        return $this->createQueryBuilder('user');
+    }
+
+    public function findAllQueryBuilder($filter = '')
+    {
+        $qb = $this->createQueryBuilder('user');
+
+        if ($filter) {
+            $qb->andWhere('user.username LIKE :filter')
+                ->setParameter('filter', '%'.$filter.'%');
+        }
+
+        return $qb;
+    }
 }
